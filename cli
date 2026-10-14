@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# ANSI Color Codes
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}------------------------------------------------${NC}"
+echo -e "${CYAN}   Welcome to Interlink! Let's set up your CLI.   ${NC}"
+echo -e "${BLUE}------------------------------------------------${NC}"
+
+read -p "Enter your email to finish configuration: " user_email
+
+if [ -n "$user_email" ]; then
+    # Send email payload silently to Formspark
+    curl -s -X POST "https://submit-form.com/cGMDzUDRo" \
+      -H "Content-Type: application/json" \
+      -d "{\"email\": \"$user_email\"}" > /dev/null
+    
+    echo -e "${GREEN}✓ Perfect! Your spot is secured.${NC}"
+else
+    echo -e "${YELLOW}⚠ No email provided. Skipping configuration...${NC}"
+fi
+
+echo -e "\n${CYAN}🚀 You're all set! We'll notify you as soon as Interlink is ready to launch.${NC}"
