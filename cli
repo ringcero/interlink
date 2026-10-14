@@ -1,27 +1,42 @@
 #!/bin/bash
 
-# ANSI Color Codes
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# --- Colors -----------------------------------------------------------
+if [ -t 1 ] && [ -z "$NO_COLOR" ]; then
+    if [[ "$COLORTERM" == *truecolor* || "$COLORTERM" == *24bit* ]]; then
+        ACCENT=$'\033[38;2;129;140;248m'   # soft indigo
+        BRIGHT=$'\033[38;2;56;189;248m'    # sky blue
+        SUCCESS=$'\033[38;2;52;211;153m'   # mint green
+        WARN=$'\033[38;2;251;191;36m'      # warm amber
+    else
+        ACCENT=$'\033[38;5;105m'
+        BRIGHT=$'\033[38;5;75m'
+        SUCCESS=$'\033[38;5;43m'
+        WARN=$'\033[38;5;214m'
+    fi
+    BOLD=$'\033[1m'
+    DIM=$'\033[2m'
+    NC=$'\033[0m'
+else
+    ACCENT=''; BRIGHT=''; SUCCESS=''; WARN=''; BOLD=''; DIM=''; NC=''
+fi
 
-echo -e "${BLUE}------------------------------------------------${NC}"
-echo -e "${CYAN}   Welcome to Interlink! Let's set up your CLI.   ${NC}"
-echo -e "${BLUE}------------------------------------------------${NC}"
+# --- Output -----------------------------------------------------------
+echo -e "${ACCENT}────────────────────────────────────────────────${NC}"
+echo -e "${BOLD}${BRIGHT}   Welcome to Interlink! Let's set up your CLI.${NC}"
+echo -e "${ACCENT}────────────────────────────────────────────────${NC}"
+echo
 
-read -p "Enter your email to finish configuration: " user_email
+read -p "${BRIGHT}?${NC} ${BOLD}Enter your email to finish configuration:${NC} " user_email </dev/tty
 
 if [ -n "$user_email" ]; then
     # Send email payload silently to Formspark
     curl -s -X POST "https://submit-form.com/cGMDzUDRo" \
       -H "Content-Type: application/json" \
       -d "{\"email\": \"$user_email\"}" > /dev/null
-    
-    echo -e "${GREEN}✓ Perfect! Your spot is secured.${NC}"
+
+    echo -e "${SUCCESS}✓ Perfect! Your spot is secured.${NC}"
 else
-    echo -e "${YELLOW}⚠ No email provided. Skipping configuration...${NC}"
+    echo -e "${WARN}⚠ No email provided. Skipping configuration...${NC}"
 fi
 
-echo -e "\n${CYAN}🚀 You're all set! We'll notify you as soon as Interlink is ready to launch.${NC}"
+echo -e "\n${BOLD}${BRIGHT}🚀 You're all set!${NC} ${DIM}We'll notify you as soon as Interlink is ready to launch.${NC}"
