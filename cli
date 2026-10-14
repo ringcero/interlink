@@ -1,42 +1,98 @@
 #!/bin/bash
 
-# --- Colors -----------------------------------------------------------
+# ── Colors (same palette as the lock page) ───────────────────────────
 if [ -t 1 ] && [ -z "$NO_COLOR" ]; then
+    NC=$'\033[0m'; BOLD=$'\033[1m'
     if [[ "$COLORTERM" == *truecolor* || "$COLORTERM" == *24bit* ]]; then
-        ACCENT=$'\033[38;2;129;140;248m'   # soft indigo
-        BRIGHT=$'\033[38;2;56;189;248m'    # sky blue
-        SUCCESS=$'\033[38;2;52;211;153m'   # mint green
-        WARN=$'\033[38;2;251;191;36m'      # warm amber
+        CBG=$'\033[48;2;10;10;10m'      # card background  #0a0a0a
+        CARDFG=$'\033[38;2;10;10;10m'   # same, as foreground (rounded corners)
+        INK=$'\033[38;2;242;242;242m'   # text              #f2f2f2
+        GRAY=$'\033[38;2;154;154;154m'  # secondary text    #9a9a9a
+        DIM=$'\033[38;2;111;111;111m'   # labels            #6f6f6f
+        BLUE=$'\033[38;2;111;160;255m'  # cursor            #6fa0ff
+        LOGOC=$'\033[38;2;44;44;255m'   # logo              #2c2cff
+        RULE=$'\033[38;2;47;47;47m'     # dividers          #2f2f2f
     else
-        ACCENT=$'\033[38;5;105m'
-        BRIGHT=$'\033[38;5;75m'
-        SUCCESS=$'\033[38;5;43m'
-        WARN=$'\033[38;5;214m'
+        CBG=$'\033[48;5;233m'; CARDFG=$'\033[38;5;233m'
+        INK=$'\033[38;5;255m'; GRAY=$'\033[38;5;247m'; DIM=$'\033[38;5;242m'
+        BLUE=$'\033[38;5;111m'; LOGOC=$'\033[38;5;63m'; RULE=$'\033[38;5;238m'
     fi
-    BOLD=$'\033[1m'
-    DIM=$'\033[2m'
-    NC=$'\033[0m'
+    B=$'\033[22m'"$INK"                 # back to the card's base style
 else
-    ACCENT=''; BRIGHT=''; SUCCESS=''; WARN=''; BOLD=''; DIM=''; NC=''
+    NC=''; BOLD=''; B=''; CBG=''; CARDFG=''
+    INK=''; GRAY=''; DIM=''; BLUE=''; LOGOC=''; RULE=''
 fi
 
-# --- Output -----------------------------------------------------------
-echo -e "${ACCENT}────────────────────────────────────────────────${NC}"
-echo -e "${BOLD}${BRIGHT}   Welcome to Interlink! Let's set up your CLI.${NC}"
-echo -e "${ACCENT}────────────────────────────────────────────────${NC}"
+# ── Helpers ──────────────────────────────────────────────────────────
+TW=64   # total width of the card
+
+rep() { printf '%*s' "$1" '' | sed "s/ /$2/g"; }
+
+# rounded top/bottom edge of the card
+edge() {
+    [ -z "$CBG" ] && return
+    local l r c
+    if [ "$1" = top ]; then l='▗'; r='▖'; c='▄'; else l='▝'; r='▘'; c='▀'; fi
+    printf '%s%s%s%s%s\n' "$CARDFG" "$l" "$(rep $((TW - 2)) "$c")" "$r" "$NC"
+}
+
+# row "plain ASCII text (only used to measure width)" "colored text"
+row() {
+    local pad=$(( TW - 3 - ${#1} ))
+    [ "$pad" -lt 0 ] && pad=0
+    if [ -n "$CBG" ]; then
+        printf '%s%s   %s%*s%s\n' "$CBG" "$INK" "$2" "$pad" '' "$NC"
+    else
+        printf '  %s\n' "$2"
+    fi
+}
+
+# meta label value   (like the lock page's Node / Cipher rows)
+meta() { printf '  %s%-9s%s%s%s%s\n' "$DIM" "$1" "$NC" "$GRAY" "$2" "$NC"; }
+
+# ── Logo: the interlocking mark, 11 cols x 6 rows ────────────────────
+LOGO=(
+    "${LOGOC}   ████████${B}"
+    "${LOGOC}▄▄▄▀▀▀▀▀███${B}"
+    "${LOGOC}███${B}     ${LOGOC}███${B}"
+    "${LOGOC}███${B}     ${LOGOC}███${B}"
+    "${LOGOC}████████${B}   "
+    "${LOGOC}▀▀▀▀▀▀▀▀${B}   "
+)
+
+# ── Wordmark: "interlink", 41 cols x 4 rows (half-block pixels) ──────
+WM=(
+    " ▀        █             ▀█   ▀       █   "
+    "▀█  █▀▀▄ ▀█▀  ▄▀▀▄ █▄▀▀  █  ▀█  █▀▀▄ █ ▄▀"
+    " █  █  █  █   █▀▀▀ █     █   █  █  █ █▀▄ "
+    "▀▀▀ ▀  ▀  ▀▀   ▀▀▀ ▀     ▀▀ ▀▀▀ ▀  ▀ ▀  ▀"
+)
+
+SP11=$(printf '%11s' '')
+# logo_row <logo row> "colored right text" <right text width>
+logo_row() {
+    row "${SP11}    $(printf '%*s' "$3" '')" "${LOGO[$1]}    $2"
+}
+
+# ── Card ─────────────────────────────────────────────────────────────
+[ -t 1 ] && clear 2>/dev/null
 echo
+edge top
+row "" ""
+logo_row 0 "" 0
+logo_row 1 "${BOLD}${WM[0]}${B}" 41
+logo_row 2 "${BOLD}${WM[1]}${B}" 41
+logo_row 3 "${BOLD}${WM[2]}${B}" 41
+logo_row 4 "${BOLD}${WM[3]}${B}" 41
+logo_row 5 "${GRAY}Next-gen cloud infrastructure.${B}" 30
+row "" ""
+row "Coming soon.#" "${BOLD}Coming soon.${B}${BLUE}█${B}"
+row "Interlink isn't ready yet. Come back later." "${GRAY}Interlink isn’t ready yet. Come back later.${B}"
+row "" ""
+edge bottom
 
-read -p "${BRIGHT}?${NC} ${BOLD}Enter your email to finish configuration:${NC} " user_email </dev/tty
-
-if [ -n "$user_email" ]; then
-    # Send email payload silently to Formspark
-    curl -s -X POST "https://submit-form.com/cGMDzUDRo" \
-      -H "Content-Type: application/json" \
-      -d "{\"email\": \"$user_email\"}" > /dev/null
-
-    echo -e "${SUCCESS}✓ Perfect! Your spot is secured.${NC}"
-else
-    echo -e "${WARN}⚠ No email provided. Skipping configuration...${NC}"
-fi
-
-echo -e "\n${BOLD}${BRIGHT}🚀 You're all set!${NC} ${DIM}We'll notify you as soon as Interlink is ready to launch.${NC}"
+# ── Footer ───────────────────────────────────────────────────────────
+printf '\n  %s%s%s\n' "$RULE" "$(rep 60 '─')" "$NC"
+meta "Status" "Not released yet"
+meta "Next" "Come back later"
+echo
